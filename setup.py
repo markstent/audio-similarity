@@ -1,15 +1,11 @@
 from setuptools import setup, find_packages
 
-setup(
-    name='swass',
-    version='1.0',
-    author='Mark Stent',
-    author_email='mark@markstent.co.za',
-    description='SWASS package for audio similarity calculation',
-    packages=find_packages(),
-    install_requires=[
-        'numpy',
-        'librosa',
-        'pypesq',
-    ],
-)
+if __name__ == "__main__":
+    setup(
+        name='audio_similarity',
+        version='1.0.1',
+        author='Mark Stent',
+        author_email='mark@markstent.co.za',
+        description='Audio similarity metrics for audio tasks',
+        packages=find_packages(),
+    )

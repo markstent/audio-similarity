@@ -1,4 +1,6 @@
 ﻿
+# Audio Similarity Package
+
 ## Table of Contents
 
 - [Audio Similarity Package](#audio-similarity-package)
@@ -18,9 +20,9 @@
   - [Contributing](#contributing)
   - [Acknowledgements](#acknowledgements)
   - [Contact](#contact)
+  - [Bugs and future work](#Bugs-and-future-work)
 
 
-# Audio Similarity Package
 
 The Audio Similarity Package is a Python library that provides functionalities to measure and compare the similarity between audio signals. It offers various metrics to evaluate different aspects of audio similarity, allowing users to assess the resemblance between original audio and generated audio, or between different audio samples.
 
@@ -75,11 +77,13 @@ Here's a simple example to demonstrate how to calculate the Stent Weighted Audio
 ```python
 from audio_similarity import AudioSimilarity
 
-# Paths to the original and generated audio files/folders
+# Paths to the original and compariosn audio files/folders
+
 original_path = 'path/to/audio_folder'
-generated_path = 'path/to/generated_audio.wav'
+compare_path = 'path/to/compare_audio.wav'
 
 # Set the sample rate and weights for the metrics
+
 sample_rate = 44100
 weights = {
     'zcr_similarity': 0.2,
@@ -90,11 +94,21 @@ weights = {
     'perceptual_similarity': 0.2
 }
 
+sample_size = 20 # If you have a large number of audio files, its much faster to select a randome sample from each
+
+verbose = True # Show logs
+
 # Create an instance of the AudioSimilarity class
-audio_similarity = AudioSimilarity(original_path, generated_path, sample_rate, weights)
+
+audio_similarity = AudioSimilarity(original_path, compare_path, sample_rate, weights, verbose=verbose, sample_size=sample_size)
+
+# Calculate a single metric
+
+zcr_similarity = audio_similarity.zcr_similarity()
 
 # Calculate the Stent Weighted Audio Similarity
-similarity_score = audio_similarity.stent_weighted_audio_similarity()
+
+similarity_score = audio_similarity.stent_weighted_audio_similarity(metrics='all') # You can select all metrics or just the 'swass' metric
 
 print(f"Stent Weighted Audio Similarity: {similarity_score}")
 ```
@@ -215,35 +229,41 @@ The `plot` method allows you to create a spider plot or a horizontal bar plot to
 #### Parameters
 
 - `metrics`: A list of metrics to plot. These metrics represent the audio similarity measures that will be visualized.
-- `option`: Option to specify the plot type. Use `'spider'` for a spider plot or `'bar'` for a horizontal bar plot.
+- `option`: Option to specify the plot type. Use `'spider'` for a spider plot or `'bar'` for a horizontal bar plot or `all` for both.
 - `figsize`: Figure size in inches, specified as a tuple of `(width, height)`.
-- `color`: Color(s) of the plot. Specify a single color as a string or a list of colors for each metric.
+- `color1`: Color(s) of the bar plot
+- `color2`: Color(s) of the radar plot
 - `alpha`: Transparency level(s) of the plot. Specify a single alpha value as a float or a list of alpha values for each metric.
 - `title`: Title of the plot.
+- `dpi`: Dots Per Inch, for the quality of the plot
+- `savefig`: Save the plot to the current directory.
+- `fontsize`: Font size for the plot.
+- `label_fontsize`: Font size for the plot labels.
+- `title_fontsize`: Font size of the title of the plot.
 
 #### Usage Examples
 
-To create a spider plot:
+To create a spider and radar plot on one image:
 
 ```python
-audio_similarity.plot(metrics=['zcr_similarity', 'rhythm_similarity', 'chroma_similarity'], option='spider', figsize=(8, 6), color='blue', alpha=0.5, title='Audio Similarity Metrics')
+audio_similarity.plot(metrics=None,
+                      option='all',
+                      figsize=(10, 7),
+                      color1='red',
+                      color2='green',
+                      dpi=100,
+                      savefig=False,
+                      fontsize=6,
+                      label_fontsize=8,
+                      title_fontsize=14, 
+                      alpha=0.5, 
+                      title='Audio Similarity Metrics')
 ```
-![enter image description here](spider.png)
+![plot](images/plot-all.png)
 
-To create a horizontal bar plot:
-
-```python
-audio_similarity.plot(metrics=['zcr_similarity', 'rhythm_similarity', 'chroma_similarity'], option='bar', figsize=(8, 6), color=['red', 'green', 'blue'], alpha=[0.5, 0.6, 0.7], title='Audio Similarity Metrics')
-```
-![enter image description here](bar.png)
+To create a horizontal bar plot: 
 
 Make sure to replace `audio_similarity` with the appropriate instance of the `AudioSimilarity` class.
-
-These examples demonstrate how to plot the specified audio similarity metrics using either a spider plot or a horizontal bar plot. Adjust the parameters such as `metrics`, `option`, `figsize`, `color`, `alpha`, and `title` according to your specific requirements.
-
-Remember to call `plt.show()` to display the plot.
-
-That's it! You can now use the `plot` method to visualize audio similarity metrics in your code.
 
 
 ## License
@@ -267,4 +287,9 @@ Special thanks to the developers and contributors of these projects for their va
 Email: mark@markstent.co.za
 Linkdin: https://www.linkedin.com/in/markstent/
 Medium: https://medium.com/@markstent
+
+## Bugs and future work
+
+- Annoying warnings on some MP3 files need to be removed.
+- Very slow, needs to speed up calculating metrics
 
