@@ -44,38 +44,21 @@ Whether you are working on audio analysis, music generation, speech recognition,
  
 ## Installation
 
-You can install the Audio Similarity package using pip. Open your terminal or command prompt and run the following command:
+To install Audio Similarity, first clone the repository:
 
-```bash
-pip install audio-similarity
-```
+git clone [https://github.com/markstent/audio-similarity.git](https://github.com/markstent/audio-similarity.git)
 
-This will download and install the latest version of the package from the Python Package Index (PyPI) along with its dependencies.
+Then, navigate to the `audio_similarity` directory and install the required Python packages using pip:
 
-Alternatively, you can install a specific version of the package by specifying the version number. For example, to install version 1.0.0, you can use the following command:
+'cd audio_similarity pip install -r requirements.txt
 
-```bash
-pip install audio-similarity==1.0.0
-```
-
-Once the installation is complete, you can import the package in your Python code and start using it:
-
-```python
-from audio_similarity import AudioSimilarity
-
-# Rest of your code...
-```
-
-Make sure you have Python and pip installed on your system before running the installation command.
-
-That's it! You have successfully installed the Audio Similarity package using pip. You are now ready to use it for audio similarity analysis.
 
 ## Usage Example
 
 Here's a simple example to demonstrate how to calculate the Stent Weighted Audio Similarity using the Audio Similarity Package:
 
 ```python
-from audio_similarity import AudioSimilarity
+from audio_similarity.audio_similarity import AudioSimilarity
 
 # Paths to the original and compariosn audio files/folders
 
@@ -290,6 +273,6 @@ Medium: https://medium.com/@markstent
 
 ## Bugs and future work
 
-- Annoying warnings on some MP3 files need to be removed.
 - Very slow, needs to speed up calculating metrics
+- Intermittent NaN values on some metrics when using sampling.
 

@@ -1,14 +1,13 @@
 import unittest
 import os
 import sys
-import os
 
 # Get the parent directory of the current file
 current_dir = os.getcwd()
-parent_dir = os.path.dirname(current_dir)
 
 # Add the parent directory to sys.path
-sys.path.append(parent_dir)
+sys.path.append(current_dir)
+
 
 from audio_similarity.audio_similarity import AudioSimilarity
 

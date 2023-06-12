@@ -143,10 +143,20 @@ class AudioSimilarity:
             logging.error("No compare audio files found.")
 
         # Randomly sample files from the original files list
-        original_files = random.sample(original_files, self.sample_size) if self.sample_size else original_files
+        if self.sample_size >= len(original_files):
+            o_sample_size = len(original_files)
+        else:
+            o_sample_size = self.sample_size
+            
+        original_files = random.sample(original_files, o_sample_size) if self.sample_size else original_files
 
         # Randomly sample files from the compare files list
-        compare_files = random.sample(compare_files, self.sample_size) if self.sample_size else compare_files
+        if self.sample_size >= len(compare_files):
+            c_sample_size = len(compare_files)
+        else:
+            c_sample_size = self.sample_size
+            
+        compare_files = random.sample(compare_files, c_sample_size ) if self.sample_size else compare_files
 
         for original_file in tqdm(original_files, desc="Loading original files:"):
             try:
