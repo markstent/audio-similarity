@@ -12,7 +12,6 @@
     - [Zero Crossing Rate (ZCR) Similarity](#zero-crossing-rate-zcr-similarity)
     - [Rhythm Similarity](#rhythm-similarity)
     - [Chroma Similarity](#chroma-similarity)
-    - [Energy Envelope Similarity](#energy-envelope-similarity)
     - [Spectral Contrast Similarity](#spectral-contrast-similarity)
     - [Perceptual Similarity](#perceptual-similarity)
   - [Plotting](#plotting)
@@ -34,7 +33,6 @@ Whether you are working on audio analysis, music generation, speech recognition,
     -   Zero Crossing Rate (ZCR) Similarity
     -   Rhythm Similarity
     -   Chroma Similarity
-    -   Energy Envelope Similarity
     -   Spectral Contrast Similarity
     -   Perceptual Similarity
     -   Stent Weighted Audio Similarity
@@ -72,7 +70,6 @@ weights = {
     'zcr_similarity': 0.2,
     'rhythm_similarity': 0.2,
     'chroma_similarity': 0.2,
-    'energy_envelope_similarity': 0.1,
     'spectral_contrast_similarity': 0.1,
     'perceptual_similarity': 0.2
 }
@@ -175,15 +172,6 @@ It's important to note that chroma similarity focuses solely on pitch content an
 
     chroma_similarity= audio_similarity.chroma_similarity()
 
-### Energy Envelope Similarity
-
-The energy envelope similarity is a metric that quantifies the similarity between the energy envelopes of the original audio and the generated audio. The energy envelope represents the magnitude variations of the audio signal over time, capturing the overall energy profile of the audio.
-
-The energy envelope similarity score ranges from 0 to 1, with a value of 1 indicating a perfect match in terms of energy envelope. A higher energy envelope similarity score suggests that the original and generated audio exhibit similar energy variations over time, indicating similarities in dynamics, intensity, or loudness.
-
-It's important to note that energy envelope similarity primarily focuses on the overall energy variations and does not capture detailed spectral or temporal features of the audio signal. Therefore, it is recommended to combine energy envelope similarity with other metrics and perceptual evaluations to obtain a more comprehensive understanding of audio similarity, especially in cases where timbral or temporal differences may impact the perceived similarity.
-
-    energy_envelope_similarity = audio_similarity.energy_envelope_similarity()
 
 ### Spectral Contrast Similarity
 

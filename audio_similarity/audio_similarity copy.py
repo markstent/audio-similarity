@@ -9,7 +9,6 @@ from functools import lru_cache
 from tqdm import tqdm
 import logging
 import random
-from sklearn.metrics import mean_absolute_error
 
 warnings.filterwarnings("ignore", category=UserWarning, module='librosa')
 
@@ -50,7 +49,8 @@ class AudioSimilarity:
                 'zcr_similarity': 0.2,
                 'rhythm_similarity': 0.2,
                 'spectral_flux_similarity': 0.2,
-                'spectral_contrast_similarity': 0.2,
+                'energy_envelope_similarity': 0.1,
+                'spectral_contrast_similarity': 0.1,
                 'perceptual_similarity': 0.2
             }
         else:
@@ -61,14 +61,11 @@ class AudioSimilarity:
         self.original_path = original_path
         self.compare_path = compare_path
 
-
         # Check if the paths are directories or files
         self.is_directory = [os.path.isdir(path) for path in [original_path, compare_path]]
-    
 
         # Load audio files once
         self.original_audios, self.compare_audios = self.load_audio_files()
-    
         
         # Check if valid audio files were loaded
         if not self.original_audios or not self.compare_audios:
@@ -84,6 +81,7 @@ class AudioSimilarity:
                 'zcr_similarity',
                 'rhythm_similarity',
                 'spectral_flux_similarity',
+                'energy_envelope_similarity',
                 'spectral_contrast_similarity',
                 'perceptual_similarity'
             ]
@@ -118,7 +116,6 @@ class AudioSimilarity:
         if self.is_directory[0]:
             try:
                 original_files = [os.path.join(self.original_path, f) for f in os.listdir(self.original_path) if f.endswith(valid_extensions)]
-                
             except FileNotFoundError as e:
                 logging.error(f"Error loading original audio files: {e}")
                 return [], []
@@ -127,7 +124,6 @@ class AudioSimilarity:
                 logging.error(f"Invalid original file path: {self.original_path}")
                 return [], []
             original_files = [self.original_path]
-            
 
         if self.is_directory[1]:
             try:
@@ -318,7 +314,46 @@ class AudioSimilarity:
             return None
 
 
-   
+    @lru_cache(maxsize=None)
+    def energy_envelope_similarity(self):
+        """
+        Calculate the energy envelope similarity between audio files.
+
+        Returns:
+            float: The average energy envelope similarity score between the audio files, normalized between 0 and 1.
+
+        Raises:
+            None
+
+        Notes:
+            The energy envelope similarity is calculated by comparing the energy envelopes of the audio signals.
+            The energy envelope represents the variation of the signal's energy over time. The similarity score
+            is obtained by calculating the Pearson correlation coefficient between the energy envelopes of the
+            original and compare audio files and normalizing it between 0 and 1. The similarity score ranges between
+            0 and 1, where a higher score indicates greater similarity.
+
+        """
+        logging.info("Calculating energy envelope similarity...")
+        total_energy_envelope_similarity = 0
+        count = 0
+
+        for original_audio in self.original_audios:
+            min_length = len(original_audio)
+            original_energy_envelope = np.abs(original_audio[:min_length])
+
+            for compare_audio in self.compare_audios:
+                min_length = min(min_length, len(compare_audio))
+                compare_energy_envelope = np.abs(compare_audio[:min_length])
+
+                energy_envelope_similarity = (np.corrcoef(original_energy_envelope[:min_length], compare_energy_envelope[:min_length])[0, 1] + 1) / 2
+                total_energy_envelope_similarity += energy_envelope_similarity
+                count += 1
+
+        if count > 0:
+            return total_energy_envelope_similarity / count
+        else:
+            logging.info("No original audio files loaded.")
+            return None
 
     @lru_cache(maxsize=None)
     def spectral_contrast_similarity(self):
@@ -435,6 +470,7 @@ class AudioSimilarity:
                     - 'zcr_similarity': The average Zero-Crossing Rate (ZCR) similarity between the audio files.
                     - 'rhythm_similarity': The average rhythm similarity between the audio files.
                     - 'chroma_similarity': The average chroma similarity between the audio files.
+                    - 'energy_envelope_similarity': The average energy envelope similarity between the audio files.
                     - 'spectral_contrast_similarity': The average spectral contrast similarity between the audio files.
                     - 'perceptual_similarity': The average perceptual similarity between the audio files.
                     - 'swass': The Stent Weighted Audio Similarity Score (SWASS) normalized between 0 and 1.
@@ -459,6 +495,7 @@ class AudioSimilarity:
         zcr_similarities = np.zeros((num_original_audios, num_compare_audios))
         rhythm_similarities = np.zeros((num_original_audios, num_compare_audios))
         chroma_similarity = np.zeros((num_original_audios, num_compare_audios))
+        energy_envelope_similarities = np.zeros((num_original_audios, num_compare_audios))
         spectral_contrast_similarities = np.zeros((num_original_audios, num_compare_audios))
         perceptual_similarities = np.zeros((num_original_audios, num_compare_audios))
 
@@ -469,6 +506,7 @@ class AudioSimilarity:
                 zcr_similarities[i, j] = self.zcr_similarity()
                 rhythm_similarities[i, j] = self.rhythm_similarity()
                 chroma_similarity[i, j] = self.chroma_similarity()
+                energy_envelope_similarities[i, j] = self.energy_envelope_similarity()
                 spectral_contrast_similarities[i, j] = self.spectral_contrast_similarity()
                 perceptual_similarities[i, j] = self.perceptual_similarity()
 
@@ -477,8 +515,9 @@ class AudioSimilarity:
             weights[0] * zcr_similarities +
             weights[1] * rhythm_similarities +
             weights[2] * chroma_similarity +
-            weights[3] * spectral_contrast_similarities +
-            weights[4] * perceptual_similarities
+            weights[3] * energy_envelope_similarities +
+            weights[4] * spectral_contrast_similarities +
+            weights[5] * perceptual_similarities
         )
 
         total_similarity = np.sum(similarities)
@@ -489,6 +528,7 @@ class AudioSimilarity:
                 'zcr_similarity': float(np.mean(zcr_similarities)),
                 'rhythm_similarity': float(np.mean(rhythm_similarities)),
                 'chroma_similarity': float(np.mean(chroma_similarity)),
+                'energy_envelope_similarity': float(np.mean(energy_envelope_similarities)),
                 'spectral_contrast_similarity': float(np.mean(spectral_contrast_similarities)),
                 'perceptual_similarity': float(np.mean(perceptual_similarities)),
                 'swass': float(total_similarity / count)
@@ -532,7 +572,7 @@ class AudioSimilarity:
         plt.rcParams.update({'font.size': fontsize})  # Adjust font size
         
         if metrics is None:
-            metrics = ['zcr_similarity', 'rhythm_similarity', 'chroma_similarity', 'perceptual_similarity', 'spectral_contrast_similarity', 'stent_weighted_audio_similarity']
+            metrics = ['zcr_similarity', 'rhythm_similarity', 'chroma_similarity', 'energy_envelope_similarity', 'perceptual_similarity', 'stent_weighted_audio_similarity']
 
         if option == 'radar':
             num_metrics = len(metrics)
@@ -546,12 +586,12 @@ class AudioSimilarity:
                     values[i] = self.rhythm_similarity()
                 elif metric == 'chroma_similarity':
                     values[i] = self.chroma_similarity()
+                elif metric == 'energy_envelope_similarity':
+                    values[i] = self.energy_envelope_similarity()
                 elif metric == 'perceptual_similarity':
                     values[i] = self.perceptual_similarity()
-                elif metric == 'spectral_contrast_similarity':
-                    values[i] = self.spectral_contrast_similarity()
                 elif metric == 'stent_weighted_audio_similarity':
-                    values[i] = self.stent_weighted_audio_similarity(metrics='swass')
+                    values[i] = self.stent_weighted_audio_similarity()
 
             fig, ax = plt.subplots(figsize=figsize, dpi=dpi, subplot_kw={'projection': 'polar'})  # Set projection to 'polar' for radar chart
             ax.plot(angles, values, color=color2, alpha=alpha)
@@ -580,10 +620,10 @@ class AudioSimilarity:
                         metric_values.append(self.rhythm_similarity())
                     elif metric == 'chroma_similarity':
                         metric_values.append(self.chroma_similarity())
-                    elif metric == 'perceptul_similarity':
-                        metric_values.append(self.perceptul_similarity())
-                    elif metric == 'spectral_contrast_similarity':
-                        metric_values.append(self.spectral_contrast_similarity())
+                    elif metric == 'energy_envelope_similarity':
+                        metric_values.append(self.energy_envelope_similarity())
+                    elif metric == 'perceptual_similarity':
+                        metric_values.append(self.perceptual_similarity())
                     elif metric == 'stent_weighted_audio_similarity':
                         metric_values.append(self.stent_weighted_audio_similarity())
 
@@ -620,10 +660,10 @@ class AudioSimilarity:
                     values[i] = self.rhythm_similarity()
                 elif metric == 'chroma_similarity':
                     values[i] = self.chroma_similarity()
+                elif metric == 'energy_envelope_similarity':
+                    values[i] = self.energy_envelope_similarity()
                 elif metric == 'perceptual_similarity':
                     values[i] = self.perceptual_similarity()
-                elif metric == 'spectral_contrast_similarity':
-                    values[i] = self.spectral_contrast_similarity()
                 elif metric == 'stent_weighted_audio_similarity':
                     values[i] = self.stent_weighted_audio_similarity()
 
@@ -639,10 +679,10 @@ class AudioSimilarity:
                     metric_values.append(self.rhythm_similarity())
                 elif metric == 'chroma_similarity':
                     metric_values.append(self.chroma_similarity())
+                elif metric == 'energy_envelope_similarity':
+                    metric_values.append(self.energy_envelope_similarity())
                 elif metric == 'perceptual_similarity':
                     metric_values.append(self.perceptual_similarity())
-                elif metric == 'spectral_contrast_similarity':
-                    metric_values.append(self.spectral_contrast_similarity())
                 elif metric == 'stent_weighted_audio_similarity':
                     metric_values.append(self.stent_weighted_audio_similarity())
 
