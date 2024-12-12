@@ -1,6 +1,8 @@
 ﻿
 # Audio Similarity Package
 
+## PACKAGE IS OUTDATED, NEEDS UPDATING ##
+
 ## Table of Contents
 
 - [Audio Similarity Package](#audio-similarity-package)
